@@ -1,7 +1,14 @@
+"""This is a Project for simulating a banking system.
+It generates and validates cards compliant with the Luhn Algorithm.
+"""
+
 import random
 
 
 class Bank:
+    """
+    This is the Bank class where all the work is done
+    """
     def __init__(self):
         self.account_dict = {}
         self.major_industry_id = "4"
@@ -46,8 +53,12 @@ Your card PIN:
 0. Exit""")
 
     @staticmethod
-    def _gen_checksum():
-        return str(random.randrange(0, 9))
+    def _gen_checksum(new_card):
+        nums = list(map(int, list(new_card)))
+        nums_double_odd = [y if x % 2 == 1 else y * 2 for x, y in enumerate(nums)]
+        nums_sub_9 = [y if y < 10 else y - 9 for y in nums_double_odd]
+        final = 10 - (sum(nums_sub_9) % 10)
+        return str(final)
 
     @staticmethod
     def _gen_pin_code():
@@ -58,11 +69,17 @@ Your card PIN:
         return "".join(map(str, random.sample(range(0, 10), 9)))
 
     def generate_card_number(self):
+        """
+        generates account id, and checksum then joins it with bank id
+        """
         account_id = self._gen_account_id()
-        checksum = self._gen_checksum()
+        checksum = self._gen_checksum("".join([self.bank_id_num, account_id]))
         return "".join([self.bank_id_num, account_id, checksum])
 
     def bank_menu(self):
+        """
+        The bulk of the program itself
+        """
         choice_1 = None
         while choice_1 != 0:
             self._print_open_screen()
@@ -77,16 +94,15 @@ Your card PIN:
                 print()
                 card_num = input("Enter your card number:").strip()
                 card_pin = input("Enter your PIN:").strip()
-                if card_num in self.account_dict.keys() and card_pin == self.account_dict[card_num]:
-                    validated = True
-                else:
-                    validated = False
 
-                if validated:
+                valid_card_pin = bool(card_num in self.account_dict.keys() and
+                                      card_pin == self.account_dict[card_num])
+
+                if valid_card_pin:
                     print("You have successfully logged in!")
 
                     validated_choice = None
-                    while validated_choice != 0 and validated_choice != 2:
+                    while validated_choice not in (0, 2):
                         self._print_validated_options()
                         validated_choice = int(input())
                         print()
